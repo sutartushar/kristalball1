@@ -1,845 +1,588 @@
-# Military Asset Management System - Technical Documentation
+# Military Asset Management System
+
+## Technical Documentation
+
+---
 
 ## Table of Contents
-1. [Project Overview](#project-overview)
-2. [Tech Stack & Architecture](#tech-stack--architecture)
-3. [Data Models / Schema](#data-models--schema)
-4. [RBAC Explanation](#rbac-explanation)
-5. [API Logging](#api-logging)
-6. [Setup Instructions](#setup-instructions)
-7. [API Endpoints](#api-endpoints)
+
+1. Introduction
+2. System Overview
+3. Core Features
+4. Technology Stack
+5. System Architecture
+6. Data Models
+7. Role-Based Access Control (RBAC)
+8. API Logging and Audit Trail
+9. Application Workflow
+10. Setup and Installation
+11. API Reference
+12. Security Considerations
+13. Future Improvements
+14. Conclusion
 
 ---
 
-## 1. Project Overview
+# 1. Introduction
 
-### Description
-The Military Asset Management System is a comprehensive web application designed to manage military assets, personnel assignments, procurement processes, and inter-base transfers. The system provides role-based access control to ensure appropriate security levels for different military personnel.
+The Military Asset Management System is a centralized web application designed to streamline the tracking, allocation, procurement, and transfer of military assets across different operational bases.
 
-### Key Features
-- **Dashboard**: Real-time metrics and system overview
-- **Asset Management**: Complete inventory tracking and management
-- **Purchase Management**: Procurement request workflow with approval system
-- **Transfer Management**: Inter-base asset transfer coordination
-- **Assignment Management**: Personnel asset assignments and expenditure tracking
-- **User Management**: Administrative user and role management
-- **Role-Based Access Control**: Three-tier permission system
+The application provides a structured workflow for handling equipment management while ensuring that access to sensitive operations is controlled through a role-based permission system.
 
-### Assumptions
-- The system operates in a controlled military network environment
-- Users have appropriate security clearances for their assigned roles
-- Asset data is maintained in real-time by authorized personnel
-- All transactions require proper approval workflows
-- The system handles sensitive military asset information
-
-### Limitations
-- **No Database Integration**: Currently uses mock data and local storage
-- **No Real-time Sync**: Changes are not synchronized across multiple sessions
-- **Limited Offline Capability**: Requires internet connection for full functionality
-- **No Advanced Reporting**: Basic reporting features only
-- **No Integration**: No connection to existing military systems or APIs
-- **Mock Authentication**: Uses simplified authentication for demonstration
-
-### Target Users
-- **System Administrators**: Full system access and user management
-- **Base Commanders**: Base-level asset oversight and approval authority
-- **Logistics Officers**: Day-to-day asset management and operations
+The platform was developed with scalability and maintainability in mind, allowing future integration with secure databases, authentication providers, and external defense systems.
 
 ---
 
-## 2. Tech Stack & Architecture
+# 2. System Overview
 
-### Frontend Technology Stack
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4 with custom military theme
-- **UI Components**: shadcn/ui component library
-- **State Management**: React Context API with local storage persistence
-- **Icons**: Lucide React icon library
+The system enables military personnel to efficiently manage operational resources through a unified dashboard.
 
-### Architecture Pattern
-- **Client-Side Rendering**: React-based SPA with Next.js
-- **Component Architecture**: Modular, reusable components
-- **Page-Based Routing**: Next.js App Router for navigation
-- **Context-Based State**: Global authentication and user state management
+It supports:
 
-### Why This Stack Was Chosen
+* Asset inventory management
+* Procurement request handling
+* Inter-base transfer operations
+* Personnel asset assignments
+* Expenditure tracking
+* Administrative user management
+* Role-based access control
 
-#### Next.js 14
-- **Server-Side Capabilities**: Built-in API routes for future backend integration
-- **Performance**: Automatic code splitting and optimization
-- **Developer Experience**: Hot reloading and TypeScript support
-- **Deployment**: Seamless Vercel deployment integration
+The application follows a modular frontend architecture and is currently implemented using mock data for demonstration purposes.
 
-#### TypeScript
-- **Type Safety**: Reduces runtime errors in critical military applications
-- **Developer Productivity**: Better IDE support and code completion
-- **Maintainability**: Self-documenting code with type definitions
-- **Scalability**: Easier refactoring and team collaboration
+## Objectives
 
-#### Tailwind CSS
-- **Rapid Development**: Utility-first approach for quick styling
-- **Consistency**: Design system tokens ensure uniform appearance
-- **Responsive Design**: Built-in responsive utilities
-- **Customization**: Easy theming for military-specific color schemes
+The primary goals of the system are:
 
-#### shadcn/ui
-- **Professional Components**: High-quality, accessible UI components
-- **Customizable**: Easy to modify for military aesthetic requirements
-- **Consistent**: Unified design language across the application
-- **Accessible**: WCAG compliance for government applications
+* Improve visibility of military assets across bases
+* Reduce manual tracking errors
+* Standardize approval workflows
+* Maintain accountability through audit logging
+* Restrict sensitive operations based on user roles
 
 ---
 
-## 3. Data Models / Schema
+# 3. Core Features
 
-### Core Entities
+## Dashboard
 
-#### User Entity
-\`\`\`typescript
-interface User {
-  id: string;
-  username: string;
-  password: string; // In production: hashed
-  name: string;
-  email: string;
-  role: 'admin' | 'base_commander' | 'logistics_officer';
-  base: string;
-  createdAt: Date;
-  lastLogin?: Date;
-}
-\`\`\`
+The dashboard provides a quick overview of system activity and operational metrics.
 
-#### Asset Entity
-\`\`\`typescript
-interface Asset {
-  id: string;
-  name: string;
-  category: 'Vehicle' | 'Equipment' | 'Weapon' | 'Communication' | 'Medical';
-  serialNumber: string;
-  status: 'Available' | 'Assigned' | 'Maintenance' | 'Retired';
-  condition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
-  location: string; // Base location
-  purchaseDate: Date;
-  purchasePrice: number;
-  currentValue: number;
-  assignedTo?: string; // Personnel ID
-  lastMaintenance?: Date;
-  nextMaintenance?: Date;
-}
-\`\`\`
+### Dashboard Capabilities
 
-#### Purchase Entity
-\`\`\`typescript
-interface Purchase {
-  id: string;
-  requestedBy: string; // User ID
-  assetName: string;
-  category: string;
-  quantity: number;
-  unitPrice: number;
-  totalCost: number;
-  vendor: string;
-  justification: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  status: 'Pending' | 'Approved' | 'Rejected' | 'Completed';
-  requestDate: Date;
-  approvedBy?: string; // User ID
-  approvalDate?: Date;
-  expectedDelivery?: Date;
-}
-\`\`\`
-
-#### Transfer Entity
-\`\`\`typescript
-interface Transfer {
-  id: string;
-  assetId: string;
-  fromBase: string;
-  toBase: string;
-  requestedBy: string; // User ID
-  approvedBy?: string; // User ID
-  reason: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Critical';
-  status: 'Pending' | 'Approved' | 'In Transit' | 'Completed' | 'Rejected';
-  requestDate: Date;
-  approvalDate?: Date;
-  transferDate?: Date;
-  completionDate?: Date;
-  transportMethod?: string;
-  estimatedArrival?: Date;
-}
-\`\`\`
-
-#### Assignment Entity
-\`\`\`typescript
-interface Assignment {
-  id: string;
-  assetId: string;
-  assignedTo: string; // Personnel name/ID
-  assignedBy: string; // User ID
-  purpose: string;
-  assignmentDate: Date;
-  expectedReturn?: Date;
-  actualReturn?: Date;
-  status: 'Active' | 'Returned' | 'Overdue' | 'Lost';
-  condition: 'Excellent' | 'Good' | 'Fair' | 'Poor';
-  notes?: string;
-}
-\`\`\`
-
-#### Expenditure Entity
-\`\`\`typescript
-interface Expenditure {
-  id: string;
-  assetId?: string;
-  category: 'Maintenance' | 'Fuel' | 'Supplies' | 'Training' | 'Other';
-  description: string;
-  amount: number;
-  date: Date;
-  approvedBy: string; // User ID
-  vendor?: string;
-  receiptNumber?: string;
-  notes?: string;
-}
-\`\`\`
-
-### Entity Relationships
-
-\`\`\`
-User (1) -----> (N) Purchase [requestedBy]
-User (1) -----> (N) Transfer [requestedBy]
-User (1) -----> (N) Assignment [assignedBy]
-User (1) -----> (N) Expenditure [approvedBy]
-
-Asset (1) -----> (N) Transfer [assetId]
-Asset (1) -----> (N) Assignment [assetId]
-Asset (1) -----> (N) Expenditure [assetId]
-
-Purchase (1) -----> (1) Asset [creates]
-Transfer (N) -----> (1) Asset [moves]
-Assignment (N) -----> (1) Asset [assigns]
-\`\`\`
+* Total asset count
+* Available vs assigned assets
+* Pending purchase requests
+* Active transfer operations
+* Expenditure summaries
+* Maintenance tracking
 
 ---
 
-## 4. RBAC Explanation
+## Asset Management
 
-### Role Hierarchy
+The asset management module is responsible for maintaining inventory records.
 
-#### 1. System Administrator (admin)
-**Access Level**: Full System Access
-- **User Management**: Create, modify, delete users
-- **System Configuration**: Modify system settings and parameters
-- **All Operations**: Complete access to all features and data
-- **Audit Access**: View all system logs and audit trails
-- **Override Authority**: Can override lower-level restrictions
+### Features
 
-#### 2. Base Commander (base_commander)
-**Access Level**: Base-Level Management
-- **Asset Oversight**: View and manage assets within their base
-- **Approval Authority**: Approve purchases and transfers
-- **Personnel Management**: Assign assets to personnel
-- **Reporting Access**: Generate base-level reports
-- **Limited User Management**: Manage logistics officers under their command
+* Add and update assets
+* Track asset condition and status
+* Monitor maintenance schedules
+* Assign assets to personnel
+* Store asset location and serial numbers
 
-#### 3. Logistics Officer (logistics_officer)
-**Access Level**: Operational Management
-- **Asset Operations**: Day-to-day asset management and tracking
-- **Request Submission**: Submit purchase and transfer requests
-- **Assignment Management**: Create and manage asset assignments
-- **Expenditure Tracking**: Record and track asset-related expenses
-- **Read-Only Reporting**: View operational reports and metrics
+### Asset Status Types
 
-### Permission Matrix
-
-| Feature | Admin | Base Commander | Logistics Officer |
-|---------|-------|----------------|-------------------|
-| Dashboard View | ✅ Full | ✅ Base-Level | ✅ Limited |
-| Asset Management | ✅ All Bases | ✅ Own Base | ✅ View/Edit |
-| Purchase Requests | ✅ All | ✅ Approve/View | ✅ Create/View |
-| Transfer Management | ✅ All | ✅ Approve/View | ✅ Create/View |
-| Assignment Management | ✅ All | ✅ Base-Level | ✅ Create/Manage |
-| User Management | ✅ Full | ✅ Limited | ❌ None |
-| System Settings | ✅ Full | ❌ None | ❌ None |
-| Audit Logs | ✅ Full | ✅ Base-Level | ❌ None |
-
-### Enforcement Method
-
-#### Frontend Enforcement
-\`\`\`typescript
-// Role-based component rendering
-const hasPermission = (requiredRole: Role, userRole: Role): boolean => {
-  const roleHierarchy = {
-    'logistics_officer': 1,
-    'base_commander': 2,
-    'admin': 3
-  };
-  return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
-};
-
-// Usage in components
-{hasPermission('base_commander', user.role) && (
-  <ApprovalButton />
-)}
-\`\`\`
-
-#### Route Protection
-\`\`\`typescript
-// Page-level access control
-const ProtectedRoute = ({ children, requiredRole }: {
-  children: React.ReactNode;
-  requiredRole: Role;
-}) => {
-  const { user } = useAuth();
-  
-  if (!user || !hasPermission(requiredRole, user.role)) {
-    return <AccessDenied />;
-  }
-  
-  return <>{children}</>;
-};
-\`\`\`
-
-#### Data Filtering
-\`\`\`typescript
-// Base-level data filtering for Base Commanders
-const getFilteredAssets = (assets: Asset[], user: User): Asset[] => {
-  if (user.role === 'admin') return assets;
-  if (user.role === 'base_commander') {
-    return assets.filter(asset => asset.location === user.base);
-  }
-  return assets; // Logistics officers see all for operational needs
-};
-\`\`\`
+* Available
+* Assigned
+* Maintenance
+* Retired
 
 ---
 
-## 5. API Logging
+## Purchase Management
 
-### Current Implementation
-The current system uses client-side logging for demonstration purposes. In a production environment, comprehensive API logging would be implemented.
+The purchase management module handles procurement workflows.
 
-### Logging Strategy
+### Features
 
-#### Transaction Logging
-\`\`\`typescript
-interface AuditLog {
-  id: string;
-  userId: string;
-  action: string;
-  resource: string;
-  resourceId: string;
-  timestamp: Date;
-  ipAddress: string;
-  userAgent: string;
-  success: boolean;
-  errorMessage?: string;
-  previousValue?: any;
-  newValue?: any;
-}
-\`\`\`
+* Create procurement requests
+* Approval and rejection workflow
+* Priority-based request handling
+* Vendor information tracking
+* Procurement history management
 
-#### Logged Actions
-- **Authentication Events**: Login, logout, failed attempts
-- **Asset Operations**: Create, update, delete, transfer
-- **Purchase Activities**: Request, approval, rejection
-- **Assignment Changes**: Create, modify, return
-- **User Management**: User creation, role changes, deactivation
-- **System Access**: Page views, feature usage, permission denials
+### Purchase Workflow
 
-#### Implementation Example
-\`\`\`typescript
-const logTransaction = async (
-  action: string,
-  resource: string,
-  resourceId: string,
-  previousValue?: any,
-  newValue?: any
-) => {
-  const logEntry: AuditLog = {
-    id: generateId(),
-    userId: getCurrentUser().id,
-    action,
-    resource,
-    resourceId,
-    timestamp: new Date(),
-    ipAddress: getClientIP(),
-    userAgent: navigator.userAgent,
-    success: true,
-    previousValue,
-    newValue
-  };
-  
-  // In production: Send to secure logging service
-  await sendToAuditService(logEntry);
-};
-\`\`\`
-
-### Security Considerations
-- **Immutable Logs**: Audit logs cannot be modified or deleted
-- **Encrypted Storage**: Sensitive data in logs is encrypted
-- **Access Control**: Only administrators can view audit logs
-- **Retention Policy**: Logs retained according to military regulations
-- **Real-time Monitoring**: Critical actions trigger immediate alerts
+1. Logistics officer submits request
+2. Base commander reviews request
+3. Request is approved or rejected
+4. Asset is added to inventory after procurement
 
 ---
 
-## 6. Setup Instructions
+## Transfer Management
 
-### Prerequisites
-- Node.js 18+ installed
-- Git for version control
-- Modern web browser (Chrome, Firefox, Safari, Edge)
+This module manages asset movement between military bases.
 
-### Installation Steps
+### Features
 
-#### 1. Clone the Repository
-\`\`\`bash
-git clone [repository-url]
+* Initiate transfer requests
+* Approve transfers
+* Monitor transfer status
+* Track transportation details
+* Record transfer completion
+
+### Transfer Status Types
+
+* Pending
+* Approved
+* In Transit
+* Completed
+* Rejected
+
+---
+
+## Assignment Management
+
+This section manages asset allocation to personnel.
+
+### Features
+
+* Assign assets to personnel
+* Record assignment purpose
+* Track return dates
+* Monitor overdue assets
+* Record asset condition after return
+
+---
+
+## User Management
+
+Administrative users can manage system users and permissions.
+
+### Features
+
+* Create users
+* Update user roles
+* Manage base assignments
+* Deactivate accounts
+* Monitor user activity
+
+---
+
+# 4. Technology Stack
+
+## Frontend Technologies
+
+| Technology        | Purpose                      |
+| ----------------- | ---------------------------- |
+| Next.js 14        | Application framework        |
+| TypeScript        | Type-safe development        |
+| Tailwind CSS      | Styling and UI customization |
+| shadcn/ui         | Reusable UI components       |
+| React Context API | State management             |
+| Lucide React      | Icons                        |
+
+---
+
+## Why These Technologies Were Chosen
+
+### Next.js
+
+Next.js provides a strong foundation for scalable web applications. Features such as routing, optimization, and API support make it suitable for enterprise-grade systems.
+
+### TypeScript
+
+TypeScript improves maintainability by introducing static typing, reducing runtime errors, and improving development efficiency.
+
+### Tailwind CSS
+
+Tailwind CSS allows rapid UI development while maintaining consistency across the application.
+
+### shadcn/ui
+
+The component library provides accessible and customizable UI components that align well with professional enterprise applications.
+
+---
+
+# 5. System Architecture
+
+The application follows a modular frontend architecture.
+
+## Architecture Overview
+
+* Client-side rendering using React
+* Component-based structure
+* Context-based global state management
+* Page routing through Next.js App Router
+* Mock-data-driven functionality for demonstration
+
+## Architectural Benefits
+
+* Easy feature expansion
+* Reusable components
+* Clear separation of concerns
+* Simplified maintenance
+* Improved scalability
+
+
+
+# 7. Role-Based Access Control (RBAC)
+
+The system uses a three-level role hierarchy to ensure controlled access to sensitive operations.
+
+## Roles
+
+### 1. System Administrator
+
+The administrator has complete system access.
+
+#### Permissions
+
+* Manage all users
+* Access all assets
+* Configure system settings
+* Access audit logs
+* Override operational restrictions
+
+---
+
+### 2. Base Commander
+
+Base commanders manage operations within their assigned base.
+
+#### Permissions
+
+* Review purchase requests
+* Approve transfers
+* Manage assets within their base
+* Generate reports
+* Assign resources to personnel
+
+---
+
+### 3. Logistics Officer
+
+Logistics officers handle operational asset activities.
+
+#### Permissions
+
+* Create purchase requests
+* Manage asset assignments
+* Track expenditures
+* Monitor asset movement
+* View operational reports
+
+---
+
+## Permission Matrix
+
+| Module            | Admin       | Base Commander | Logistics Officer  |
+| ----------------- | ----------- | -------------- | ------------------ |
+| Dashboard         | Full Access | Base Access    | Limited Access     |
+| Asset Management  | Full Access | Base Access    | Operational Access |
+| Purchase Requests | Full Access | Approve/View   | Create/View        |
+| Transfers         | Full Access | Approve/View   | Create/View        |
+| User Management   | Full Access | Limited        | No Access          |
+| Audit Logs        | Full Access | Restricted     | No Access          |
+
+---
+
+# 8. API Logging and Audit Trail
+
+The system maintains transaction logs to improve accountability and traceability.
+
+## Logged Activities
+
+* Login attempts
+* Asset updates
+* Purchase approvals
+* Transfer requests
+* Assignment changes
+* User management actions
+
+
+## Security Measures
+
+* Immutable audit records
+* Restricted audit access
+* Encrypted storage in production
+* Activity monitoring
+* Event traceability
+
+---
+
+# 9. Application Workflow
+
+## Asset Procurement Workflow
+
+1. Logistics officer creates a purchase request
+2. Base commander reviews the request
+3. Request is approved or rejected
+4. Asset is added to inventory after procurement
+5. Asset becomes available for assignment
+
+---
+
+## Transfer Workflow
+
+1. Transfer request is initiated
+2. Request enters approval stage
+3. Approved transfer moves to transit stage
+4. Asset reaches destination base
+5. Transfer status changes to completed
+
+---
+
+## Assignment Workflow
+
+1. Asset is selected for assignment
+2. Personnel details are recorded
+3. Assignment period is defined
+4. Asset status changes to assigned
+5. Asset is returned and condition is updated
+
+---
+
+# 10. Setup and Installation
+
+## Prerequisites
+
+Before running the application, ensure the following are installed:
+
+* Node.js 18 or later
+* npm or yarn
+* Git
+
+---
+
+## Installation Steps
+
+### Clone Repository
+
+```bash
+git clone <repository-url>
 cd military-asset-management
-\`\`\`
+```
 
-#### 2. Install Dependencies
-\`\`\`bash
+---
+
+### Install Dependencies
+
+```bash
 npm install
-# or
-yarn install
-\`\`\`
+```
 
-#### 3. Environment Setup
-Create a `.env.local` file in the root directory:
-\`\`\`env
-# Application Configuration
+---
+
+### Run Development Server
+
+```bash
+npm run dev
+```
+
+The application will run at:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## Environment Configuration
+
+Create a `.env.local` file:
+
+```env
 NEXT_PUBLIC_APP_NAME="Military Asset Management System"
 NEXT_PUBLIC_APP_VERSION="1.0.0"
-
-# In production, add database and authentication configurations
-# DATABASE_URL="your-database-connection-string"
-# NEXTAUTH_SECRET="your-nextauth-secret"
-# NEXTAUTH_URL="http://localhost:3000"
-\`\`\`
-
-#### 4. Development Server
-\`\`\`bash
-npm run dev
-# or
-yarn dev
-\`\`\`
-
-The application will be available at `http://localhost:3000`
-
-#### 5. Production Build
-\`\`\`bash
-npm run build
-npm start
-# or
-yarn build
-yarn start
-\`\`\`
-
-### Demo Accounts
-Use these accounts to test different role functionalities:
-
-| Username | Password | Role | Base |
-|----------|----------|------|------|
-| admin | admin123 | System Administrator | HQ |
-| commander1 | cmd123 | Base Commander | Fort Liberty |
-| logistics1 | log123 | Logistics Officer | Fort Liberty |
-
-### File Structure
-\`\`\`
-military-asset-management/
-├── app/                    # Next.js app directory
-│   ├── globals.css        # Global styles and theme
-│   ├── layout.tsx         # Root layout component
-│   └── page.tsx           # Main application page
-├── components/            # React components
-│   ├── auth/             # Authentication components
-│   ├── layout/           # Layout components
-│   ├── pages/            # Page components
-│   └── ui/               # UI components (shadcn/ui)
-├── lib/                  # Utility libraries
-│   ├── auth.ts           # Authentication logic
-│   ├── mock-data.ts      # Mock data for demonstration
-│   └── utils.ts          # Utility functions
-└── public/               # Static assets
-\`\`\`
-
-### Troubleshooting
-
-#### Common Issues
-1. **Port Already in Use**: Change port with `npm run dev -- -p 3001`
-2. **Node Version**: Ensure Node.js 18+ is installed
-3. **Dependencies**: Clear node_modules and reinstall if issues persist
-4. **Browser Cache**: Clear browser cache if styles don't load properly
-
-#### Development Tips
-- Use browser developer tools to inspect authentication state
-- Check console for any JavaScript errors
-- Verify mock data is loading correctly in the Network tab
+```
 
 ---
 
-## 7. API Endpoints
+## Demo Credentials
 
-### Authentication Endpoints
+| Username   | Password | Role              |
+| ---------- | -------- | ----------------- |
+| admin      | admin123 | Administrator     |
+| commander1 | cmd123   | Base Commander    |
+| logistics1 | log123   | Logistics Officer |
 
-#### POST /api/auth/login
-**Description**: Authenticate user credentials
-\`\`\`typescript
-// Request
+---
+
+# 11. API Reference
+
+## Authentication APIs
+
+### Login
+
+```http
+POST /api/auth/login
+```
+
+#### Request
+
+```json
 {
   "username": "admin",
   "password": "admin123"
 }
+```
 
-// Response (Success)
+#### Response
+
+```json
 {
   "success": true,
-  "user": {
-    "id": "1",
-    "username": "admin",
-    "name": "System Administrator",
-    "role": "admin",
-    "base": "HQ"
-  },
-  "token": "jwt-token-here"
+  "token": "jwt-token"
 }
-
-// Response (Error)
-{
-  "success": false,
-  "error": "Invalid credentials"
-}
-\`\`\`
-
-#### POST /api/auth/logout
-**Description**: Logout current user
-\`\`\`typescript
-// Response
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-\`\`\`
-
-### Asset Management Endpoints
-
-#### GET /api/assets
-**Description**: Retrieve assets with optional filtering
-\`\`\`typescript
-// Query Parameters
-?base=Fort+Liberty&category=Vehicle&status=Available
-
-// Response
-{
-  "success": true,
-  "data": [
-    {
-      "id": "asset-1",
-      "name": "M1A2 Abrams Tank",
-      "category": "Vehicle",
-      "serialNumber": "M1A2-001",
-      "status": "Available",
-      "condition": "Excellent",
-      "location": "Fort Liberty",
-      "purchaseDate": "2023-01-15",
-      "currentValue": 8500000
-    }
-  ],
-  "total": 1,
-  "page": 1,
-  "limit": 10
-}
-\`\`\`
-
-#### POST /api/assets
-**Description**: Create new asset
-\`\`\`typescript
-// Request
-{
-  "name": "Humvee M1151",
-  "category": "Vehicle",
-  "serialNumber": "HMV-2024-001",
-  "location": "Fort Liberty",
-  "purchasePrice": 220000,
-  "condition": "Excellent"
-}
-
-// Response
-{
-  "success": true,
-  "data": {
-    "id": "asset-new",
-    "name": "Humvee M1151",
-    // ... other fields
-  }
-}
-\`\`\`
-
-#### PUT /api/assets/:id
-**Description**: Update existing asset
-\`\`\`typescript
-// Request
-{
-  "status": "Maintenance",
-  "condition": "Good",
-  "notes": "Scheduled maintenance"
-}
-
-// Response
-{
-  "success": true,
-  "data": {
-    "id": "asset-1",
-    // ... updated fields
-  }
-}
-\`\`\`
-
-### Purchase Management Endpoints
-
-#### GET /api/purchases
-**Description**: Retrieve purchase requests
-\`\`\`typescript
-// Query Parameters
-?status=Pending&priority=High&requestedBy=user-1
-
-// Response
-{
-  "success": true,
-  "data": [
-    {
-      "id": "purchase-1",
-      "assetName": "Night Vision Goggles",
-      "category": "Equipment",
-      "quantity": 50,
-      "unitPrice": 3500,
-      "totalCost": 175000,
-      "status": "Pending",
-      "priority": "High",
-      "requestDate": "2024-01-15T10:00:00Z"
-    }
-  ]
-}
-\`\`\`
-
-#### POST /api/purchases
-**Description**: Create purchase request
-\`\`\`typescript
-// Request
-{
-  "assetName": "Combat Helmets",
-  "category": "Equipment",
-  "quantity": 100,
-  "unitPrice": 450,
-  "vendor": "Defense Solutions Inc",
-  "justification": "Replacement for damaged equipment",
-  "priority": "Medium"
-}
-
-// Response
-{
-  "success": true,
-  "data": {
-    "id": "purchase-new",
-    "status": "Pending",
-    // ... other fields
-  }
-}
-\`\`\`
-
-#### PUT /api/purchases/:id/approve
-**Description**: Approve purchase request (Base Commander+ only)
-\`\`\`typescript
-// Request
-{
-  "approved": true,
-  "notes": "Approved for immediate procurement"
-}
-
-// Response
-{
-  "success": true,
-  "data": {
-    "id": "purchase-1",
-    "status": "Approved",
-    "approvedBy": "commander-1",
-    "approvalDate": "2024-01-16T14:30:00Z"
-  }
-}
-\`\`\`
-
-### Transfer Management Endpoints
-
-#### GET /api/transfers
-**Description**: Retrieve transfer requests
-\`\`\`typescript
-// Response
-{
-  "success": true,
-  "data": [
-    {
-      "id": "transfer-1",
-      "assetId": "asset-1",
-      "fromBase": "Fort Liberty",
-      "toBase": "Fort Bragg",
-      "status": "Pending",
-      "priority": "Medium",
-      "requestDate": "2024-01-15T09:00:00Z"
-    }
-  ]
-}
-\`\`\`
-
-#### POST /api/transfers
-**Description**: Create transfer request
-\`\`\`typescript
-// Request
-{
-  "assetId": "asset-1",
-  "toBase": "Fort Bragg",
-  "reason": "Operational requirement",
-  "priority": "High",
-  "transportMethod": "Military Transport"
-}
-
-// Response
-{
-  "success": true,
-  "data": {
-    "id": "transfer-new",
-    "status": "Pending",
-    // ... other fields
-  }
-}
-\`\`\`
-
-### Assignment Management Endpoints
-
-#### GET /api/assignments
-**Description**: Retrieve asset assignments
-\`\`\`typescript
-// Response
-{
-  "success": true,
-  "data": [
-    {
-      "id": "assignment-1",
-      "assetId": "asset-1",
-      "assignedTo": "Sgt. Johnson",
-      "purpose": "Training Exercise",
-      "assignmentDate": "2024-01-10T08:00:00Z",
-      "expectedReturn": "2024-01-20T17:00:00Z",
-      "status": "Active"
-    }
-  ]
-}
-\`\`\`
-
-#### POST /api/assignments
-**Description**: Create new assignment
-\`\`\`typescript
-// Request
-{
-  "assetId": "asset-1",
-  "assignedTo": "Cpl. Smith",
-  "purpose": "Field Operations",
-  "expectedReturn": "2024-02-01T17:00:00Z"
-}
-
-// Response
-{
-  "success": true,
-  "data": {
-    "id": "assignment-new",
-    "status": "Active",
-    // ... other fields
-  }
-}
-\`\`\`
-
-### User Management Endpoints
-
-#### GET /api/users
-**Description**: Retrieve users (Admin only)
-\`\`\`typescript
-// Response
-{
-  "success": true,
-  "data": [
-    {
-      "id": "user-1",
-      "username": "commander1",
-      "name": "Col. Sarah Mitchell",
-      "role": "base_commander",
-      "base": "Fort Liberty",
-      "email": "s.mitchell@military.gov",
-      "lastLogin": "2024-01-15T14:30:00Z"
-    }
-  ]
-}
-\`\`\`
-
-#### POST /api/users
-**Description**: Create new user (Admin only)
-\`\`\`typescript
-// Request
-{
-  "username": "newuser",
-  "password": "secure123",
-  "name": "Lt. John Doe",
-  "email": "j.doe@military.gov",
-  "role": "logistics_officer",
-  "base": "Fort Liberty"
-}
-
-// Response
-{
-  "success": true,
-  "data": {
-    "id": "user-new",
-    "username": "newuser",
-    // ... other fields (password excluded)
-  }
-}
-\`\`\`
-
-### Error Responses
-
-All endpoints return consistent error responses:
-\`\`\`typescript
-{
-  "success": false,
-  "error": "Error message",
-  "code": "ERROR_CODE",
-  "details": {
-    // Additional error details
-  }
-}
-\`\`\`
-
-### Common HTTP Status Codes
-- `200`: Success
-- `201`: Created
-- `400`: Bad Request
-- `401`: Unauthorized
-- `403`: Forbidden
-- `404`: Not Found
-- `500`: Internal Server Error
+```
 
 ---
 
-## Conclusion
+## Asset APIs
 
-This Military Asset Management System provides a comprehensive foundation for managing military assets with appropriate security controls and role-based access. The system is designed to be scalable and can be extended with additional features such as real database integration, advanced reporting, and external system integrations.
+### Get Assets
 
-For production deployment, additional security measures, database integration, and compliance with military standards would be required.
+```http
+GET /api/assets
+```
+
+### Create Asset
+
+```http
+POST /api/assets
+```
+
+### Update Asset
+
+```http
+PUT /api/assets/:id
+```
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: January 2024  
-**Prepared By**: v0 AI Assistant  
-**Classification**: Unclassified//For Official Use Only
+## Purchase APIs
+
+### Get Purchases
+
+```http
+GET /api/purchases
+```
+
+### Create Purchase Request
+
+```http
+POST /api/purchases
+```
+
+### Approve Purchase
+
+```http
+PUT /api/purchases/:id/approve
+```
+
+---
+
+## Transfer APIs
+
+### Get Transfers
+
+```http
+GET /api/transfers
+```
+
+### Create Transfer
+
+```http
+POST /api/transfers
+```
+
+---
+
+## Assignment APIs
+
+### Get Assignments
+
+```http
+GET /api/assignments
+```
+
+### Create Assignment
+
+```http
+POST /api/assignments
+```
+
+---
+
+## User APIs
+
+### Get Users
+
+```http
+GET /api/users
+```
+
+### Create User
+
+```http
+POST /api/users
+```
+
+---
+
+# 12. Security Considerations
+
+The application is designed with security as a core requirement.
+
+## Security Features
+
+* Role-based access control
+* Restricted administrative operations
+* Audit logging
+* Session-based authentication
+* Controlled access to operational data
+
+## Recommended Production Enhancements
+
+* JWT or OAuth authentication
+* Database encryption
+* HTTPS enforcement
+* Multi-factor authentication
+* Secure API gateway
+* Intrusion detection mechanisms
+
+---
+
+# 13. Future Improvements
+
+The current implementation serves as a functional prototype and can be expanded further.
+
+## Planned Enhancements
+
+* Database integration
+* Real-time synchronization
+* Notification system
+* Advanced analytics and reporting
+* Integration with external defense systems
+* Mobile support
+* Offline functionality
+* Multi-language support
+
+---
+
+# 14. Conclusion
+
+The Military Asset Management System provides a structured and scalable solution for handling military asset operations.
+
+By combining centralized asset tracking, approval workflows, and role-based security, the application improves operational efficiency while maintaining accountability.
+
+The modular architecture also ensures that future enhancements can be implemented without major structural changes.
+
+---
+
+**Document Version:** 1.0
+**Prepared For:** Technical Evaluation and System Review
+**Project Type:** Military Asset Management Platform
+**Reference Source:** User-provided project specification fileciteturn0file0
